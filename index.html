@@ -191,7 +191,7 @@ const SAMPLE_FRONTBAR_SALES = {};
    string; sales keys match the roster's "First Last" name format. Until
    the first scheduled run happens, asOf stays null and the dashboard
    behaves exactly as before (sample data / manual upload only). */
-const DAILY_SNAPSHOT = {"asOf": "2026-07-14", "sales": {"Allison Boen": {"service": 3283.96, "retail": 239.8, "membership": 1}, "Bella Cruz": {"service": 2260.25, "retail": 433.6, "membership": 2}, "Hazel Anthony": {"service": 0.0, "retail": 317.0, "membership": 0}, "Ilianna Simental": {"service": 823.88, "retail": 149.8, "membership": 0}, "Janelle Ramos": {"service": 794.41, "retail": 150.0, "membership": 2}, "Jen Brotherton": {"service": 97.19, "retail": 0.0, "membership": 0}, "Jenna Daher": {"service": 3943.99, "retail": 1289.0, "membership": 4}, "Lauren Vinyard": {"service": 1167.0, "retail": 216.7, "membership": 1}, "Macie Kimball": {"service": 0.0, "retail": 0.0, "membership": 0}, "Madison Stewart": {"service": 87.29, "retail": 130.5, "membership": 1}, "Miranda Alvarado": {"service": 0.0, "retail": 14.4, "membership": 1}, "Phlisha Pierce": {"service": 2907.35, "retail": 1123.9, "membership": 3}, "Shauntelle Turner": {"service": 531.61, "retail": 436.4, "membership": 1}, "Sienna Goodrich": {"service": 2464.34, "retail": 212.2, "membership": 1}, "Veronica Rodriguez": {"service": 2971.54, "retail": 308.2, "membership": 0}}};
+const DAILY_SNAPSHOT = {"asOf": "2026-07-15", "sales": {"Allison Boen": {"service": 3563.47, "retail": 426.0, "membership": 1}, "Bella Cruz": {"service": 2627.99, "retail": 659.5, "membership": 2}, "Hazel Anthony": {"service": 0.0, "retail": 317.0, "membership": 0}, "Ilianna Simental": {"service": 823.88, "retail": 149.8, "membership": 0}, "Janelle Ramos": {"service": 794.41, "retail": 150.0, "membership": 2}, "Jen Brotherton": {"service": 97.19, "retail": 0.0, "membership": 0}, "Jenna Daher": {"service": 3943.99, "retail": 1289.0, "membership": 4}, "Lauren Vinyard": {"service": 1338.02, "retail": 216.7, "membership": 1}, "Macie Kimball": {"service": 0.0, "retail": 0.0, "membership": 0}, "Madison Stewart": {"service": 87.29, "retail": 130.5, "membership": 1}, "Miranda Alvarado": {"service": 0.0, "retail": 14.4, "membership": 1}, "Phlisha Pierce": {"service": 3324.63, "retail": 1270.6, "membership": 3}, "Shauntelle Turner": {"service": 531.61, "retail": 436.4, "membership": 1}, "Sienna Goodrich": {"service": 2464.34, "retail": 212.2, "membership": 1}, "Veronica Rodriguez": {"service": 3211.59, "retail": 308.2, "membership": 0}}};
 /* DAILY_SNAPSHOT_END */
 
 /* MONTH_RESET_START - rewritten by the Brentwood Dashboard Month Reset
@@ -209,7 +209,7 @@ const DAILY_SNAPSHOT = {"asOf": "2026-07-14", "sales": {"Allison Boen": {"servic
    Goals untouched, since goals are meant to roll over from month to month.
    Until the first reset runs, asOf stays null and the dashboard behaves
    exactly as before. */
-const MONTH_RESET = { asOf: null, mainRoster: [], frontBarRoster: [] };
+const MONTH_RESET = {"asOf": "2026-07-15", "mainRoster": [{"name": "Allison Boen", "type": "FT"}, {"name": "Bella Cruz", "type": "FT"}, {"name": "Ilianna Simental", "type": "PT"}, {"name": "Janelle Ramos", "type": "PT"}, {"name": "Jen Brotherton", "type": "PT"}, {"name": "Jenna Daher", "type": "FT"}, {"name": "Lauren Vinyard", "type": "PT"}, {"name": "Madison Stewart", "type": "PT"}, {"name": "Phlisha Pierce", "type": "FT"}, {"name": "Shauntelle Turner", "type": "PT"}, {"name": "Sienna Goodrich", "type": "FT"}, {"name": "Veronica Rodriguez", "type": "FT"}], "frontBarRoster": [{"name": "Hazel Anthony", "type": "FT"}, {"name": "Macie Kimball", "type": "PT"}, {"name": "Miranda Alvarado", "type": "PT"}]};
 /* MONTH_RESET_END */
 
 /* DAILY_RETAIL_LOG_START - rewritten automatically each morning by the
@@ -223,7 +223,7 @@ const MONTH_RESET = { asOf: null, mainRoster: [], frontBarRoster: [] };
    snapshots. Cleared automatically when the Brentwood Dashboard Month
    Reset skill runs. Drives the daily $500 push calendar under the Front
    Bar section. */
-const DAILY_RETAIL_LOG = {"2026-07-14": 153.8};
+const DAILY_RETAIL_LOG = {"2026-07-14": 153.8, "2026-07-15": 558.8};
 /* DAILY_RETAIL_LOG_END */
 
 const FIELD_ALIASES = {
