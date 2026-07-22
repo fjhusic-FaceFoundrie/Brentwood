@@ -42,6 +42,7 @@
   .ff-brand-eyebrow { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--sage-dark); font-weight: 600; margin-bottom: 6px; }
   .ff-brand-title { font-size: 34px; font-weight: 600; line-height: 1.1; margin: 0; }
   .ff-brand-sub { font-size: 14px; color: var(--charcoal-soft); margin-top: 6px; }
+  .ff-refreshed-at { font-size: 12px; color: var(--sage-dark); margin-top: 4px; font-weight: 600; }
 
   .ff-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .ff-btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 600; border: 1px solid var(--stone-dark); background: var(--white); color: var(--charcoal); cursor: pointer; transition: all .15s ease; white-space: nowrap; }
@@ -188,8 +189,11 @@ const SAMPLE_FRONTBAR_SALES = {};
    Brentwood Daily Download scheduled task. Do not hand-edit this block -
    the injector script (scripts/inject_snapshot.py) replaces everything
    between these two marker comments as one unit. asOf is a YYYY-MM-DD
-   string; sales keys match the roster's "First Last" name format. Until
-   the first scheduled run happens, asOf stays null and the dashboard
+   string; refreshedAt is the exact UTC datetime the injector last ran
+   (rendered in each viewer's own local time zone in the header, so anyone
+   looking at the page can tell at a glance whether the data is current);
+   sales keys match the roster's "First Last" name format. Until the first
+   scheduled run happens, asOf and refreshedAt stay null and the dashboard
    behaves exactly as before (sample data / manual upload only). */
 const DAILY_SNAPSHOT = {"asOf": "2026-07-22", "refreshedAt": "2026-07-22T17:32:07.318408+00:00", "sales": {"Allison Boen": {"service": 4875.04, "retail": 696.9, "membership": 1}, "Bella Cruz": {"service": 4635.21, "retail": 1290.39, "membership": 2}, "Hazel Anthony": {"service": 0.0, "retail": 451.0, "membership": 1}, "Ilianna Simental": {"service": 1241.15, "retail": 149.8, "membership": 0}, "Janelle Ramos": {"service": 1809.94, "retail": 685.6, "membership": 3}, "Jen Brotherton": {"service": 97.19, "retail": 0.0, "membership": 0}, "Jenna Daher": {"service": 5207.84, "retail": 2121.0, "membership": 4}, "Lauren Vinyard": {"service": 2035.09, "retail": 746.2, "membership": 2}, "Macie Kimball": {"service": 0.0, "retail": 24.99, "membership": 0}, "Madison Stewart": {"service": 529.69, "retail": 310.9, "membership": 3}, "Miranda Alvarado": {"service": 0.0, "retail": 279.4, "membership": 1}, "Phlisha Pierce": {"service": 5566.91, "retail": 1673.8, "membership": 4}, "Shauntelle Turner": {"service": 970.92, "retail": 719.4, "membership": 3}, "Sienna Goodrich": {"service": 4099.78, "retail": 599.2, "membership": 2}, "Veronica Rodriguez": {"service": 5331.31, "retail": 739.2, "membership": 2}}};
 /* DAILY_SNAPSHOT_END */
@@ -304,6 +308,16 @@ function formatValue(val, format) {
   return Math.round(val).toLocaleString();
 }
 
+function formatRefreshedAt(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  return d.toLocaleString(undefined, {
+    month: "short", day: "numeric", year: "numeric",
+    hour: "numeric", minute: "2-digit",
+  });
+}
+
 function daysInMonth(year, monthIndex) {
   return new Date(year, monthIndex + 1, 0).getDate();
 }
@@ -384,6 +398,7 @@ const state = {
   pending: null,
   dragOver: false,
   _lastResetApplied: "0000-00-00",
+  _refreshedAt: null,
 };
 
 function loadPersisted() {
@@ -409,6 +424,7 @@ function loadPersisted() {
       if (parsed && typeof parsed === "object" && "data" in parsed) {
         state.salesData = parsed.data || {};
         state._salesAsOf = parsed.asOf || "0000-00-00";
+        state._refreshedAt = parsed.refreshedAt || null;
       } else {
         state.salesData = parsed;
         state._salesAsOf = "0000-00-00";
@@ -446,6 +462,7 @@ function saveSalesData() {
   try {
     localStorage.setItem("ff-sales-data-brentwood", JSON.stringify({
       asOf: state._salesAsOf || new Date().toISOString().slice(0, 10),
+      refreshedAt: state._refreshedAt,
       data: state.salesData,
     }));
   } catch (e) { console.error("Could not save sales data", e); }
@@ -463,7 +480,14 @@ function saveSalesData() {
 function applyDailySnapshotIfNewer() {
   if (!DAILY_SNAPSHOT || !DAILY_SNAPSHOT.asOf) return; // no scheduled run has populated this yet
   const cachedAsOf = state._salesAsOf || "0000-00-00";
-  if (DAILY_SNAPSHOT.asOf <= cachedAsOf) return;
+  if (DAILY_SNAPSHOT.asOf < cachedAsOf) return;
+  if (DAILY_SNAPSHOT.asOf === cachedAsOf) {
+    // Same-day re-publish (the 1pm and 8:30pm scheduled runs share one asOf
+    // date): apply only if this snapshot was stamped LATER than whatever
+    // this browser already has - evening numbers show up for someone who
+    // loaded the page at lunch, but an older copy never overwrites newer.
+    if (String(DAILY_SNAPSHOT.refreshedAt || "") <= String(state._refreshedAt || "")) return;
+  }
 
   const nextSales = { ...state.salesData };
   const nextRoster = [...state.roster];
@@ -493,6 +517,7 @@ function applyDailySnapshotIfNewer() {
   state.salesData = nextSales;
   state.roster = nextRoster;
   state._salesAsOf = DAILY_SNAPSHOT.asOf;
+  state._refreshedAt = DAILY_SNAPSHOT.refreshedAt || new Date().toISOString();
   state.banner = {
     type: "success",
     text: "Updated automatically with Boulevard data through " + DAILY_SNAPSHOT.asOf + " (" +
@@ -543,6 +568,7 @@ function applyMonthResetIfNewer() {
   state.salesData = {}; // fresh month - zero every sales figure
   state.dailyRetailLog = {}; // fresh month - clear the daily $500 push calendar too
   state._salesAsOf = MONTH_RESET.asOf;
+  state._refreshedAt = new Date().toISOString();
   state._lastResetApplied = MONTH_RESET.asOf;
   state.banner = {
     type: "success",
@@ -656,6 +682,7 @@ function applyRows(rows, mapping) {
   state.salesData = nextSales;
   state.roster = nextRoster;
   state._salesAsOf = new Date().toISOString().slice(0, 10);
+  state._refreshedAt = new Date().toISOString();
 
   let text = "Updated " + updatedCount + " esthetician" + (updatedCount === 1 ? "" : "s") + ".";
   if (addedCount > 0) text += " Added " + addedCount + " new team member" + (addedCount === 1 ? "" : "s") + " (set to Part-Time by default — adjust in Settings).";
@@ -739,12 +766,14 @@ function clearData() {
 /* ---------------------------------------------------------------- */
 
 function renderHeader(today, monthLabel, dim, expectedPct) {
+  const refreshedLabel = formatRefreshedAt(state._refreshedAt);
   return (
     '<div class="ff-header">' +
       '<div>' +
         '<div class="ff-brand-eyebrow">Face Foundrié Brentwood · ' + escapeHtml(monthLabel) + '</div>' +
         '<h1 class="ff-brand-title ff-serif">Brentwood Live Performance Dashboard</h1>' +
         '<div class="ff-brand-sub">Day ' + today.getDate() + ' of ' + dim + ' · ' + Math.round(expectedPct) + '% of the month elapsed</div>' +
+        '<div class="ff-refreshed-at">' + (refreshedLabel ? ('Last refreshed ' + escapeHtml(refreshedLabel)) : "Not yet refreshed automatically - upload a report or wait for tomorrow's scheduled pull") + '</div>' +
       '</div>' +
       '<div class="ff-actions">' +
         '<input type="file" id="ff-file-input" accept=".csv" style="display:none">' +
